@@ -39,6 +39,25 @@ impl Tesseract {
 	}
 }
 
+pub fn ocr(filename: &str, language: &str) -> String {
+	let cube = Tesseract::new();
+	cube.set_lang(language);
+	cube.set_image(filename);
+	cube.recognize();
+	return cube.get_text().to_string()
+}
+
+
+#[test]
+fn blah(){
+	ocr("img.png", "eng");
+}
+
 #[test]
 fn it_works() {
+	let cube = Tesseract::new();
+	cube.set_lang("eng");
+	cube.set_image("img.png");
+	cube.recognize();
+	println!("{:?}", cube.get_text());
 }

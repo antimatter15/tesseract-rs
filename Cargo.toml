@@ -1,0 +1,14 @@
+[package]
+name = "tesseract"
+version = "0.1.0"
+authors = ["Kevin Kwok <antimatter15@gmail.com>"]
+description = """
+Bindings to Tesseract
+"""
+
+[dependencies]
+libc = "0.1"
+
+[dependencies.tesseract-sys]
+version = "0.1"
+path = "tesseract-sys"

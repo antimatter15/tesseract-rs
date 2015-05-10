@@ -1,0 +1,8 @@
+[package]
+name = "tesseract-sys"
+version = "0.1.0"
+authors = ["Kevin Kwok <antimatter15@gmail.com>"]
+
+
+[dependencies]
+libc = "0.1"

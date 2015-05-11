@@ -12,6 +12,17 @@ pub struct Tesseract {
 	raw: *mut TessBaseAPI
 }
 
+impl Drop for Tesseract {
+	fn drop(&mut self) {
+		println!("Ave Imperator! Nos morituri te salutamus.");
+		unsafe { TessBaseAPIDelete(self.raw) }
+	}
+}
+
+fn cs(string: &str) -> *const libc::c_char {
+	CString::new(string).unwrap().as_ptr()
+}
+
 impl Tesseract {
 	pub fn new() -> Tesseract {
 		Tesseract {
@@ -19,13 +30,16 @@ impl Tesseract {
 		}
 	}
 	pub fn set_lang(&self, language: &str) -> i32 {
-		unsafe { TessBaseAPIInit3(self.raw, ptr::null(), CString::new(language).unwrap().as_ptr()) }
+		unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs(language)) }
 	}
 	pub fn set_image(&self, filename: &str) {
 		unsafe {
-			let img = pixRead(CString::new(filename).unwrap().as_ptr());
+			let img = pixRead(cs(filename));
 			TessBaseAPISetImage2(self.raw, img);
 		}
+	}
+	pub fn set_variable(&self, name: &str, value: &str) -> i32 {
+		unsafe { TessBaseAPISetVariable(self.raw, cs(name), cs(value)) }
 	}
 	pub fn recognize(&self) -> i32 {
 		unsafe {

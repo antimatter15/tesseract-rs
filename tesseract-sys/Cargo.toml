@@ -2,7 +2,8 @@
 name = "tesseract-sys"
 version = "0.1.0"
 authors = ["Kevin Kwok <antimatter15@gmail.com>"]
-
+description = "Rust Bindings for Tesseract OCR"
+license = "MIT"
 
 [dependencies]
 libc = "0.1"

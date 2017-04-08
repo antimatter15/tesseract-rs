@@ -19,8 +19,9 @@ impl Drop for Tesseract {
 	}
 }
 
-fn cs(string: &str) -> *const libc::c_char {
-	CString::new(string).unwrap().as_ptr()
+fn cs(string: &str) -> CString {
+	// do not call as_ptr yet, since the data will be freed before we return
+	CString::new(string).unwrap()
 }
 
 impl Tesseract {
@@ -30,16 +31,20 @@ impl Tesseract {
 		}
 	}
 	pub fn set_lang(&self, language: &str) -> i32 {
-		unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs(language)) }
+		let cs_language = cs(language);
+		unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs_language.as_ptr()) }
 	}
 	pub fn set_image(&self, filename: &str) {
+		let cs_filename = cs(filename);
 		unsafe {
-			let img = pixRead(cs(filename));
+			let img = pixRead(cs_filename.as_ptr());
 			TessBaseAPISetImage2(self.raw, img);
 		}
 	}
 	pub fn set_variable(&self, name: &str, value: &str) -> i32 {
-		unsafe { TessBaseAPISetVariable(self.raw, cs(name), cs(value)) }
+		let cs_name = cs(name);
+		let cs_value = cs(value);
+		unsafe { TessBaseAPISetVariable(self.raw, cs_name.as_ptr(), cs_value.as_ptr()) }
 	}
 	pub fn recognize(&self) -> i32 {
 		unsafe {

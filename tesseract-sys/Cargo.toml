@@ -1,9 +1,11 @@
 [package]
 name = "tesseract-sys"
-version = "0.1.0"
-authors = ["Kevin Kwok <antimatter15@gmail.com>"]
+version = "0.2.0"
+authors = ["Kevin Kwok <antimatter15@gmail.com>", "Chris Couzens <ccouzens@gmail.com>"]
 description = "Rust Bindings for Tesseract OCR"
 license = "MIT"
 
 [dependencies]
-libc = "0.1"
+
+[build-dependencies]
+bindgen = "0.45.0"

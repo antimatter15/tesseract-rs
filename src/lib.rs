@@ -48,7 +48,7 @@ impl Tesseract {
 	}
 	pub fn recognize(&self) -> i32 {
 		unsafe {
-			TessBaseAPIRecognize(self.raw, ptr::null())
+			TessBaseAPIRecognize(self.raw, ptr::null_mut())
 		}
 	}
 	pub fn get_text(&self) -> &str {

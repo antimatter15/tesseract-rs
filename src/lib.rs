@@ -34,23 +34,23 @@ impl Tesseract {
             raw: unsafe { TessBaseAPICreate() },
         }
     }
-    pub fn set_lang(&self, language: &str) -> i32 {
+    pub fn set_lang(&mut self, language: &str) -> i32 {
         let cs_language = cs(language);
         unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs_language.as_ptr()) }
     }
-    pub fn set_image(&self, filename: &str) {
+    pub fn set_image(&mut self, filename: &str) {
         let cs_filename = cs(filename);
         unsafe {
             let img = pixRead(cs_filename.as_ptr());
             TessBaseAPISetImage2(self.raw, img);
         }
     }
-    pub fn set_variable(&self, name: &str, value: &str) -> i32 {
+    pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
         let cs_name = cs(name);
         let cs_value = cs(value);
         unsafe { TessBaseAPISetVariable(self.raw, cs_name.as_ptr(), cs_value.as_ptr()) }
     }
-    pub fn recognize(&self) -> i32 {
+    pub fn recognize(&mut self) -> i32 {
         unsafe { TessBaseAPIRecognize(self.raw, ptr::null_mut()) }
     }
     pub fn get_text(&self) -> &str {
@@ -61,7 +61,7 @@ impl Tesseract {
 }
 
 pub fn ocr(filename: &str, language: &str) -> String {
-    let cube = Tesseract::new();
+    let mut cube = Tesseract::new();
     cube.set_lang(language);
     cube.set_image(filename);
     cube.recognize();
@@ -78,7 +78,7 @@ fn blah() {
 
 #[test]
 fn it_works() {
-    let cube = Tesseract::new();
+    let mut cube = Tesseract::new();
     cube.set_lang("eng");
     cube.set_image("img.png");
     cube.recognize();

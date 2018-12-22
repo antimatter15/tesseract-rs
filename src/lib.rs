@@ -70,7 +70,10 @@ pub fn ocr(filename: &str, language: &str) -> String {
 
 #[test]
 fn blah() {
-    ocr("img.png", "eng");
+    assert_eq!(
+        ocr("img.png", "eng"),
+        include_str!("../img.txt").to_string()
+    );
 }
 
 #[test]
@@ -79,5 +82,5 @@ fn it_works() {
     cube.set_lang("eng");
     cube.set_image("img.png");
     cube.recognize();
-    println!("{:?}", cube.get_text());
+    assert_eq!(cube.get_text(), include_str!("../img.txt").to_string())
 }

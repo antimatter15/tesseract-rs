@@ -1,13 +1,13 @@
 [package]
 name          = "tesseract"
 version       = "0.1.0"
-authors       = ["Kevin Kwok <antimatter15@gmail.com>"]
+authors       = ["Kevin Kwok <antimatter15@gmail.com>", "Chris Couzens <ccouzens@gmail.com>"]
 documentation = "https://docs.rs/tesseract"
 repository    = "https://github.com/antimatter15/tesseract-rs"
 description   = "Higher-level bindings for Tesseract OCR"
 license       = "MIT"
 keywords      = ["tesseract", "OCR", "bindings"]
-
+categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
 leptonica-sys = "0.1.0"

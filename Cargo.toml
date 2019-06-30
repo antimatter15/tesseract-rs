@@ -10,8 +10,8 @@ keywords      = ["tesseract", "OCR", "bindings"]
 categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
-leptonica-sys = "0.1.0"
+leptonica-sys = "0.2.0"
 
 [dependencies.tesseract-sys]
-version = "0.2"
+version = "0.3"
 path    = "tesseract-sys"

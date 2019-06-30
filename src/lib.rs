@@ -1,5 +1,4 @@
 extern crate leptonica_sys;
-extern crate libc;
 extern crate tesseract_sys;
 
 use leptonica_sys::pixRead;

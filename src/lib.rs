@@ -17,8 +17,13 @@ pub struct Tesseract {
 
 impl Drop for Tesseract {
     fn drop(&mut self) {
-        println!("Ave Imperator! Nos morituri te salutamus.");
         unsafe { TessBaseAPIDelete(self.raw) }
+    }
+}
+
+impl Default for Tesseract {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -64,11 +69,11 @@ pub fn ocr(filename: &str, language: &str) -> String {
     cube.set_lang(language);
     cube.set_image(filename);
     cube.recognize();
-    return cube.get_text().to_string();
+    cube.get_text().to_string()
 }
 
 #[test]
-fn blah() {
+fn ocr_test() {
     assert_eq!(
         ocr("img.png", "eng"),
         include_str!("../img.txt").to_string()
@@ -76,7 +81,7 @@ fn blah() {
 }
 
 #[test]
-fn it_works() {
+fn expanded_test() {
     let mut cube = Tesseract::new();
     cube.set_lang("eng");
     cube.set_image("img.png");

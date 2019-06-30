@@ -1,7 +1,7 @@
 extern crate leptonica_sys;
 extern crate tesseract_sys;
 
-use leptonica_sys::pixRead;
+use leptonica_sys::{pixRead, pixFreeData};
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr;
@@ -47,6 +47,7 @@ impl Tesseract {
         unsafe {
             let img = pixRead(cs_filename.as_ptr());
             TessBaseAPISetImage2(self.raw, img);
+            pixFreeData(img);
         }
     }
     pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
@@ -58,6 +59,14 @@ impl Tesseract {
         unsafe { TessBaseAPIRecognize(self.raw, ptr::null_mut()) }
     }
     pub fn get_text(&self) -> &str {
+        // I think this leaks memory
+        // The c++ documentation
+        // https://tesseract-ocr.github.io/4.0.0/a01625.html#ga115ef656f83352ba608b4f0bf9cfa2c4
+        // says memory must be freed "with the delete [] operator".
+        // The c documentation doesn't say much
+        // https://tesseract-ocr.github.io/4.0.0/a00014.html#a624731fab8a0107a6949195f62d63710
+        // But the code directly calls the c++ function.
+        // Rust can't call `delete []`, so I'm not sure how rust is meant to free this string.
         unsafe {
             str::from_utf8(CStr::from_ptr(TessBaseAPIGetUTF8Text(self.raw)).to_bytes()).unwrap()
         }

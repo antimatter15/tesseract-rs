@@ -11,7 +11,8 @@ keywords      = ["tesseract", "OCR", "bindings"]
 
 [dependencies]
 libc = "0.1"
+leptonica-sys = "0.1.0"
 
 [dependencies.tesseract-sys]
-version = "0.1"
+version = "0.2"
 path    = "tesseract-sys"

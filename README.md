@@ -1,2 +1,2 @@
 # tesseract-rs
-Rust bindings for Tesseract
+Rust bindings for [Tesseract](https://github.com/tesseract-ocr/tesseract)

@@ -9,6 +9,7 @@ license = "MIT"
 
 [dependencies]
 libc = "0.1"
+leptonica-sys = "0.1.0"
 
 [dependencies.tesseract-sys]
 version = "0.2"

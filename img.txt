@@ -1,6 +1,4 @@
-Rust is a systems programming language
-that runs blazingly fast, prevents almost all
-crashes*, and eliminates data races.
-
-Show me more!
-
+Hundreds of companies around the world are using Rust in production today for fast, low-
+resource, cross-platform solutions. Software you know and love, like Firefox, Dropbox, and
+Cloudflare, uses Rust. From startups to large corporations, from embedded devices to
+scalable web services, Rust is a great fit.

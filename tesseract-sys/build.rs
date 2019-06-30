@@ -7,7 +7,6 @@ fn main() {
     // Tell cargo to tell rustc to link the system tesseract
     // and leptonica shared libraries.
     println!("cargo:rustc-link-lib=tesseract");
-    println!("cargo:rustc-link-lib=lept");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -17,8 +16,13 @@ fn main() {
         // bindings for.
         .header("wrapper.h")
         .whitelist_function("^Tess.*")
-        .whitelist_function("^pixRead.*")
-        .whitelist_function("pixFreeData")
+        .blacklist_type("Boxa")
+        .blacklist_type("Pix")
+        .blacklist_type("Pixa")
+        .blacklist_type("_IO_FILE")
+        .blacklist_type("_IO_codecvt")
+        .blacklist_type("_IO_marker")
+        .blacklist_type("_IO_wide_data")
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.

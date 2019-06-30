@@ -2,11 +2,14 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use leptonica_sys::{Boxa, Pix, Pixa, _IO_FILE};
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use leptonica_sys::{pixFreeData, pixRead};
     use std::ffi::CStr;
     use std::ffi::CString;
     use std::ptr;

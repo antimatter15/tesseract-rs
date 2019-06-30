@@ -3,7 +3,7 @@ use tesseract::*;
 
 fn main() {
     println!("Hello, world!");
-    let cube = Tesseract::new();
+    let mut cube = Tesseract::new();
     let filename = "img.png";
     let language = "eng";
 	cube.set_lang(language);

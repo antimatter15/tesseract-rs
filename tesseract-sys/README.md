@@ -5,6 +5,12 @@ Rust bindings for [Tesseract](https://github.com/tesseract-ocr/tesseract)
 
 This links to the C libraries [leptonica](https://github.com/danbloomberg/leptonica) and tesseract.
 
+On Ubuntu and derivatives the additional dependencies can be installed by running:
+
+```bash
+sudo apt-get install libleptonica-dev libtesseract-dev clang
+```
+
 On Fedora 30 the additional dependencies can be installed by running:
 
 ```bash

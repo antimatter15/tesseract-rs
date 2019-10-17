@@ -4,7 +4,8 @@
 
 use leptonica_sys::{Boxa, Pix, Pixa, _IO_FILE};
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+include!(concat!(env!("OUT_DIR"), "/capi_bindings.rs"));
+include!(concat!(env!("OUT_DIR"), "/public_types_bindings.rs"));
 
 #[cfg(test)]
 mod tests {
@@ -30,5 +31,12 @@ mod tests {
             pixFreeData(image);
             TessBaseAPIDelete(cube);
         }
+    }
+
+    #[test]
+    #[allow(path_statements)]
+    fn defined_constants() {
+        kMinCredibleResolution;
+        kMaxCredibleResolution;
     }
 }

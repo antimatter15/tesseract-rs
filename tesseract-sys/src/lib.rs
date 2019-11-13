@@ -2,7 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use leptonica_sys::{Boxa, Pix, Pixa, _IO_FILE};
+use leptonica_sys::*;
 
 include!(concat!(env!("OUT_DIR"), "/capi_bindings.rs"));
 include!(concat!(env!("OUT_DIR"), "/public_types_bindings.rs"));

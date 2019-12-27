@@ -11,7 +11,4 @@ categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
 leptonica-sys = "0.3.0"
-
-[dependencies.tesseract-sys]
-version = "0.5.0"
-path    = "tesseract-sys"
+tesseract-sys = "0.5.1"

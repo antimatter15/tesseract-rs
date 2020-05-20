@@ -1,15 +1,15 @@
 extern crate leptonica_sys;
 extern crate tesseract_sys;
 
-use leptonica_sys::{pixFreeData, pixRead};
+use leptonica_sys::{pixFreeData, pixRead, pixReadMem};
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::ptr;
 use std::str;
 use tesseract_sys::{
     TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2, TessBaseAPISetVariable,
-    TessDeleteText,
+    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteText,
 };
 
 pub struct Tesseract {
@@ -70,6 +70,20 @@ impl Tesseract {
             );
         }
     }
+    pub fn set_image_from_mem(&mut self, img: &[u8]) {
+        unsafe {
+            let img = pixReadMem(img.as_ptr(), img.len());
+            TessBaseAPISetImage2(self.raw, img);
+            pixFreeData(img);
+        }
+    }
+
+    pub fn set_source_resolution(&mut self, ppi: i32) {
+        unsafe {
+            TessBaseAPISetSourceResolution(self.raw, ppi);
+        }
+    }
+
     pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
         let cs_name = cs(name);
         let cs_value = cs(value);

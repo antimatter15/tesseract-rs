@@ -53,7 +53,7 @@ impl Tesseract {
     }
     pub fn set_frame(
         &mut self,
-        frame_data: &Vec<u8>,
+        frame_data: &[u8],
         width: i32,
         height: i32,
         bytes_per_pixel: i32,
@@ -97,7 +97,7 @@ pub fn ocr(filename: &str, language: &str) -> String {
 }
 
 pub fn ocr_from_frame(
-    frame_data: &Vec<u8>,
+    frame_data: &[u8],
     width: i32,
     height: i32,
     bytes_per_pixel: i32,

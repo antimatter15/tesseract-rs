@@ -140,12 +140,29 @@ fn ocr_from_frame_test() {
 
     let mut img = File::open("img.tiff").unwrap();
     let mut buffer = Vec::new();
-    let _read_data = img.read_to_end(&mut buffer).unwrap();
+    img.read_to_end(&mut buffer).unwrap();
 
     assert_eq!(
         ocr_from_frame(&buffer, 2256, 324, 3, 2256 * 3, "eng"),
         include_str!("../img.txt").to_string()
     );
+}
+
+#[test]
+fn ocr_from_mem_with_ppi() {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut img = File::open("img.tiff").unwrap();
+    let mut buffer = Vec::new();
+    img.read_to_end(&mut buffer).unwrap();
+
+    let mut cube = Tesseract::new();
+    cube.set_lang("eng");
+    cube.set_image_from_mem(&buffer);
+
+    cube.set_source_resolution(70);
+    assert_eq!(cube.get_text(), include_str!("../img.txt").to_string());
 }
 
 #[test]

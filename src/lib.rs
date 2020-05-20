@@ -96,10 +96,40 @@ pub fn ocr(filename: &str, language: &str) -> String {
     cube.get_text()
 }
 
+pub fn ocr_from_frame(
+    frame_data: &Vec<u8>,
+    width: i32,
+    height: i32,
+    bytes_per_pixel: i32,
+    bytes_per_line: i32,
+    language: &str,
+) -> String {
+    let mut cube = Tesseract::new();
+    cube.set_lang(language);
+    cube.set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line);
+    cube.recognize();
+    cube.get_text()
+}
+
 #[test]
 fn ocr_test() {
     assert_eq!(
         ocr("img.png", "eng"),
+        include_str!("../img.txt").to_string()
+    );
+}
+
+#[test]
+fn ocr_from_frame_test() {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut img = File::open("img.tiff").unwrap();
+    let mut buffer = Vec::new();
+    let _read_data = img.read_to_end(&mut buffer).unwrap();
+
+    assert_eq!(
+        ocr_from_frame(&buffer, 2256, 324, 3, 2256 * 3, "eng"),
         include_str!("../img.txt").to_string()
     );
 }

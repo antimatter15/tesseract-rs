@@ -8,7 +8,8 @@ use std::ptr;
 use std::str;
 use tesseract_sys::{
     TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage2, TessBaseAPISetVariable, TessDeleteText,
+    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2, TessBaseAPISetVariable,
+    TessDeleteText,
 };
 
 pub struct Tesseract {
@@ -48,6 +49,25 @@ impl Tesseract {
             let img = pixRead(cs_filename.as_ptr());
             TessBaseAPISetImage2(self.raw, img);
             pixFreeData(img);
+        }
+    }
+    pub fn set_frame(
+        &mut self,
+        frame_data: &Vec<u8>,
+        width: i32,
+        height: i32,
+        bytes_per_pixel: i32,
+        bytes_per_line: i32,
+    ) {
+        unsafe {
+            TessBaseAPISetImage(
+                self.raw,
+                frame_data.as_ptr(),
+                width,
+                height,
+                bytes_per_pixel,
+                bytes_per_line,
+            );
         }
     }
     pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {

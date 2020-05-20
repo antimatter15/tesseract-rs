@@ -8,8 +8,8 @@ use std::ptr;
 use std::str;
 use tesseract_sys::{
     TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage2, TessBaseAPISetSourceResolution,
-    TessBaseAPISetVariable, TessDeleteText,
+    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteText,
 };
 
 pub struct Tesseract {
@@ -49,6 +49,25 @@ impl Tesseract {
             let img = pixRead(cs_filename.as_ptr());
             TessBaseAPISetImage2(self.raw, img);
             pixFreeData(img);
+        }
+    }
+    pub fn set_frame(
+        &mut self,
+        frame_data: &[u8],
+        width: i32,
+        height: i32,
+        bytes_per_pixel: i32,
+        bytes_per_line: i32,
+    ) {
+        unsafe {
+            TessBaseAPISetImage(
+                self.raw,
+                frame_data.as_ptr(),
+                width,
+                height,
+                bytes_per_pixel,
+                bytes_per_line,
+            );
         }
     }
     pub fn set_image_from_mem(&mut self, img: &[u8]) {
@@ -91,12 +110,59 @@ pub fn ocr(filename: &str, language: &str) -> String {
     cube.get_text()
 }
 
+pub fn ocr_from_frame(
+    frame_data: &[u8],
+    width: i32,
+    height: i32,
+    bytes_per_pixel: i32,
+    bytes_per_line: i32,
+    language: &str,
+) -> String {
+    let mut cube = Tesseract::new();
+    cube.set_lang(language);
+    cube.set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line);
+    cube.recognize();
+    cube.get_text()
+}
+
 #[test]
 fn ocr_test() {
     assert_eq!(
         ocr("img.png", "eng"),
         include_str!("../img.txt").to_string()
     );
+}
+
+#[test]
+fn ocr_from_frame_test() {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut img = File::open("img.tiff").unwrap();
+    let mut buffer = Vec::new();
+    img.read_to_end(&mut buffer).unwrap();
+
+    assert_eq!(
+        ocr_from_frame(&buffer, 2256, 324, 3, 2256 * 3, "eng"),
+        include_str!("../img.txt").to_string()
+    );
+}
+
+#[test]
+fn ocr_from_mem_with_ppi() {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut img = File::open("img.tiff").unwrap();
+    let mut buffer = Vec::new();
+    img.read_to_end(&mut buffer).unwrap();
+
+    let mut cube = Tesseract::new();
+    cube.set_lang("eng");
+    cube.set_image_from_mem(&buffer);
+
+    cube.set_source_resolution(70);
+    assert_eq!(cube.get_text(), include_str!("../img.txt").to_string());
 }
 
 #[test]

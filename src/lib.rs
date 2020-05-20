@@ -8,7 +8,8 @@ use std::ptr;
 use std::str;
 use tesseract_sys::{
     TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage2, TessBaseAPISetVariable, TessDeleteText,
+    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2, TessBaseAPISetVariable,
+    TessDeleteText,
 };
 
 pub struct Tesseract {
@@ -50,6 +51,25 @@ impl Tesseract {
             pixFreeData(img);
         }
     }
+    pub fn set_frame(
+        &mut self,
+        frame_data: &[u8],
+        width: i32,
+        height: i32,
+        bytes_per_pixel: i32,
+        bytes_per_line: i32,
+    ) {
+        unsafe {
+            TessBaseAPISetImage(
+                self.raw,
+                frame_data.as_ptr(),
+                width,
+                height,
+                bytes_per_pixel,
+                bytes_per_line,
+            );
+        }
+    }
     pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
         let cs_name = cs(name);
         let cs_value = cs(value);
@@ -76,10 +96,40 @@ pub fn ocr(filename: &str, language: &str) -> String {
     cube.get_text()
 }
 
+pub fn ocr_from_frame(
+    frame_data: &[u8],
+    width: i32,
+    height: i32,
+    bytes_per_pixel: i32,
+    bytes_per_line: i32,
+    language: &str,
+) -> String {
+    let mut cube = Tesseract::new();
+    cube.set_lang(language);
+    cube.set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line);
+    cube.recognize();
+    cube.get_text()
+}
+
 #[test]
 fn ocr_test() {
     assert_eq!(
         ocr("img.png", "eng"),
+        include_str!("../img.txt").to_string()
+    );
+}
+
+#[test]
+fn ocr_from_frame_test() {
+    use std::fs::File;
+    use std::io::Read;
+
+    let mut img = File::open("img.tiff").unwrap();
+    let mut buffer = Vec::new();
+    let _read_data = img.read_to_end(&mut buffer).unwrap();
+
+    assert_eq!(
+        ocr_from_frame(&buffer, 2256, 324, 3, 2256 * 3, "eng"),
         include_str!("../img.txt").to_string()
     );
 }

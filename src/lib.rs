@@ -1,26 +1,9 @@
-extern crate leptonica_sys;
-extern crate tesseract_sys;
+pub mod plumbing;
 
-use leptonica_sys::{pixFreeData, pixRead, pixReadMem};
-use std::ffi::CStr;
 use std::ffi::CString;
-use std::ptr;
 use std::str;
-use tesseract_sys::{
-    TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteText,
-};
 
-pub struct Tesseract {
-    raw: *mut TessBaseAPI,
-}
-
-impl Drop for Tesseract {
-    fn drop(&mut self) {
-        unsafe { TessBaseAPIDelete(self.raw) }
-    }
-}
+pub struct Tesseract(plumbing::TessBaseAPI);
 
 impl Default for Tesseract {
     fn default() -> Self {
@@ -29,27 +12,24 @@ impl Default for Tesseract {
 }
 
 fn cs(string: &str) -> CString {
-    // do not call as_ptr yet, since the data will be freed before we return
     CString::new(string).unwrap()
 }
 
 impl Tesseract {
     pub fn new() -> Tesseract {
-        Tesseract {
-            raw: unsafe { TessBaseAPICreate() },
-        }
+        Tesseract(plumbing::TessBaseAPI::new())
     }
     pub fn set_lang(&mut self, language: &str) -> i32 {
         let cs_language = cs(language);
-        unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs_language.as_ptr()) }
+        match self.0.init_2(None, Some(&cs_language)) {
+            Ok(()) => 0,
+            Err(_) => -1,
+        }
     }
     pub fn set_image(&mut self, filename: &str) {
         let cs_filename = cs(filename);
-        unsafe {
-            let img = pixRead(cs_filename.as_ptr());
-            TessBaseAPISetImage2(self.raw, img);
-            pixFreeData(img);
-        }
+        let img = plumbing::Pix::read(&cs_filename).unwrap();
+        self.0.set_image_2(&img);
     }
     pub fn set_frame(
         &mut self,
@@ -59,46 +39,40 @@ impl Tesseract {
         bytes_per_pixel: i32,
         bytes_per_line: i32,
     ) {
-        unsafe {
-            TessBaseAPISetImage(
-                self.raw,
-                frame_data.as_ptr(),
-                width,
-                height,
-                bytes_per_pixel,
-                bytes_per_line,
-            );
-        }
+        self.0
+            .set_image_1(frame_data, width, height, bytes_per_pixel, bytes_per_line)
+            .unwrap();
     }
     pub fn set_image_from_mem(&mut self, img: &[u8]) {
-        unsafe {
-            let img = pixReadMem(img.as_ptr(), img.len());
-            TessBaseAPISetImage2(self.raw, img);
-            pixFreeData(img);
-        }
+        let pix = plumbing::Pix::read_mem(img).unwrap();
+        self.0.set_image_2(&pix);
     }
 
     pub fn set_source_resolution(&mut self, ppi: i32) {
-        unsafe {
-            TessBaseAPISetSourceResolution(self.raw, ppi);
-        }
+        self.0.set_source_resolution(ppi)
     }
 
     pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
         let cs_name = cs(name);
         let cs_value = cs(value);
-        unsafe { TessBaseAPISetVariable(self.raw, cs_name.as_ptr(), cs_value.as_ptr()) }
+        match self.0.set_variable(&cs_name, &cs_value) {
+            Ok(()) => 1,
+            Err(_) => 0,
+        }
     }
     pub fn recognize(&mut self) -> i32 {
-        unsafe { TessBaseAPIRecognize(self.raw, ptr::null_mut()) }
-    }
-    pub fn get_text(&self) -> String {
-        unsafe {
-            let cs_value = TessBaseAPIGetUTF8Text(self.raw);
-            let string = CStr::from_ptr(cs_value).to_string_lossy().into_owned();
-            TessDeleteText(cs_value);
-            string
+        match self.0.recognize() {
+            Ok(()) => 0,
+            Err(_) => -1,
         }
+    }
+    pub fn get_text(&mut self) -> String {
+        self.0
+            .get_utf8_text()
+            .unwrap()
+            .as_ref()
+            .to_string_lossy()
+            .into_owned()
     }
 }
 

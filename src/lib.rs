@@ -61,42 +61,46 @@ impl Tesseract {
     pub fn new() -> Tesseract {
         Tesseract(plumbing::TessBaseAPI::new())
     }
-    pub fn set_lang(&mut self, language: &str) -> Result<(), SetLangError> {
-        Ok(self.0.init_2(None, Some(&CString::new(language)?))?)
+    pub fn set_lang(mut self, language: &str) -> Result<Self, SetLangError> {
+        self.0.init_2(None, Some(&CString::new(language)?))?;
+        Ok(self)
     }
-    pub fn set_image(&mut self, filename: &str) -> Result<(), SetImageError> {
+    pub fn set_image(mut self, filename: &str) -> Result<Self, SetImageError> {
         let pix = plumbing::Pix::read(&CString::new(filename)?)?;
         self.0.set_image_2(&pix);
-        Ok(())
+        Ok(self)
     }
     pub fn set_frame(
-        &mut self,
+        mut self,
         frame_data: &[u8],
         width: i32,
         height: i32,
         bytes_per_pixel: i32,
         bytes_per_line: i32,
-    ) -> Result<(), plumbing::TessBaseAPISetImageSafetyError> {
+    ) -> Result<Self, plumbing::TessBaseAPISetImageSafetyError> {
         self.0
-            .set_image_1(frame_data, width, height, bytes_per_pixel, bytes_per_line)
+            .set_image_1(frame_data, width, height, bytes_per_pixel, bytes_per_line)?;
+        Ok(self)
     }
-    pub fn set_image_from_mem(&mut self, img: &[u8]) -> Result<(), plumbing::PixReadMemError> {
+    pub fn set_image_from_mem(mut self, img: &[u8]) -> Result<Self, plumbing::PixReadMemError> {
         let pix = plumbing::Pix::read_mem(img)?;
         self.0.set_image_2(&pix);
-        Ok(())
+        Ok(self)
     }
 
-    pub fn set_source_resolution(&mut self, ppi: i32) {
-        self.0.set_source_resolution(ppi)
+    pub fn set_source_resolution(mut self, ppi: i32) -> Self {
+        self.0.set_source_resolution(ppi);
+        self
     }
 
-    pub fn set_variable(&mut self, name: &str, value: &str) -> Result<(), SetVariableError> {
-        Ok(self
-            .0
-            .set_variable(&CString::new(name)?, &CString::new(value)?)?)
+    pub fn set_variable(mut self, name: &str, value: &str) -> Result<Self, SetVariableError> {
+        self.0
+            .set_variable(&CString::new(name)?, &CString::new(value)?)?;
+        Ok(self)
     }
-    pub fn recognize(&mut self) -> Result<(), plumbing::TessBaseAPIRecogniseError> {
-        self.0.recognize()
+    pub fn recognize(mut self) -> Result<Self, plumbing::TessBaseAPIRecogniseError> {
+        self.0.recognize()?;
+        Ok(self)
     }
     pub fn get_text(&mut self) -> Result<String, plumbing::TessBaseAPIGetUTF8TextError> {
         Ok(self
@@ -109,11 +113,11 @@ impl Tesseract {
 }
 
 pub fn ocr(filename: &str, language: &str) -> Result<String, TesseractError> {
-    let mut cube = Tesseract::new();
-    cube.set_lang(language)?;
-    cube.set_image(filename)?;
-    cube.recognize()?;
-    Ok(cube.get_text()?)
+    Ok(Tesseract::new()
+        .set_lang(language)?
+        .set_image(filename)?
+        .recognize()?
+        .get_text()?)
 }
 
 pub fn ocr_from_frame(
@@ -124,11 +128,11 @@ pub fn ocr_from_frame(
     bytes_per_line: i32,
     language: &str,
 ) -> Result<String, TesseractError> {
-    let mut cube = Tesseract::new();
-    cube.set_lang(language)?;
-    cube.set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line)?;
-    cube.recognize()?;
-    Ok(cube.get_text()?)
+    Ok(Tesseract::new()
+        .set_lang(language)?
+        .set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line)?
+        .recognize()?
+        .get_text()?)
 }
 
 #[test]
@@ -151,22 +155,21 @@ fn ocr_from_frame_test() -> Result<(), TesseractError> {
 
 #[test]
 fn ocr_from_mem_with_ppi() -> Result<(), TesseractError> {
-    let mut cube = Tesseract::new();
-    cube.set_lang("eng")?;
-    cube.set_image_from_mem(include_bytes!("../img.tiff"))?;
-
-    cube.set_source_resolution(70);
+    let mut cube = Tesseract::new()
+        .set_lang("eng")?
+        .set_image_from_mem(include_bytes!("../img.tiff"))?
+        .set_source_resolution(70);
     assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
     Ok(())
 }
 
 #[test]
 fn expanded_test() -> Result<(), TesseractError> {
-    let mut cube = Tesseract::new();
-    cube.set_lang("eng")?;
-    cube.set_image("img.png")?;
-    cube.set_variable("tessedit_char_blacklist", "z")?;
-    cube.recognize()?;
+    let mut cube = Tesseract::new()
+        .set_lang("eng")?
+        .set_image("img.png")?
+        .set_variable("tessedit_char_blacklist", "z")?
+        .recognize()?;
     assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
     Ok(())
 }

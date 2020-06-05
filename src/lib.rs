@@ -1,113 +1,123 @@
-extern crate leptonica_sys;
-extern crate tesseract_sys;
+extern crate thiserror;
 
-use leptonica_sys::{pixFreeData, pixRead, pixReadMem};
-use std::ffi::CStr;
+use self::thiserror::Error;
 use std::ffi::CString;
-use std::ptr;
+use std::ffi::NulError;
 use std::str;
-use tesseract_sys::{
-    TessBaseAPI, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteText,
-};
 
-pub struct Tesseract {
-    raw: *mut TessBaseAPI,
+pub mod plumbing;
+
+#[derive(Debug, Error)]
+pub enum InitializeError {
+    #[error("Conversion to CString failed")]
+    CStringError(#[from] NulError),
+    #[error("TessBaseApi failed to initialize")]
+    TessBaseAPIInitError(#[from] plumbing::TessBaseAPIInitError),
 }
 
-impl Drop for Tesseract {
-    fn drop(&mut self) {
-        unsafe { TessBaseAPIDelete(self.raw) }
-    }
+#[derive(Debug, Error)]
+pub enum SetImageError {
+    #[error("Conversion to CString failed")]
+    CStringError(#[from] NulError),
+    #[error("Failed to read image")]
+    PixReadError(#[from] plumbing::PixReadError),
 }
 
-impl Default for Tesseract {
-    fn default() -> Self {
-        Self::new()
-    }
+#[derive(Debug, Error)]
+pub enum SetVariableError {
+    #[error("Conversion to CString failed")]
+    CStringError(#[from] NulError),
+    #[error("TessBaseApi failed to set variable")]
+    TessBaseAPISetVariableError(#[from] plumbing::TessBaseAPISetVariableError),
 }
 
-fn cs(string: &str) -> CString {
-    // do not call as_ptr yet, since the data will be freed before we return
-    CString::new(string).unwrap()
+#[derive(Debug, Error)]
+pub enum TesseractError {
+    #[error("Failed to set language")]
+    InitializeError(#[from] InitializeError),
+    #[error("Failed to set image")]
+    SetImageError(#[from] SetImageError),
+    #[error("Errored whilst recognizing")]
+    RecognizeError(#[from] plumbing::TessBaseAPIRecogniseError),
+    #[error("Errored whilst getting text")]
+    GetTextError(#[from] plumbing::TessBaseAPIGetUTF8TextError),
+    #[error("Errored whilst setting frame")]
+    SetFrameError(#[from] plumbing::TessBaseAPISetImageSafetyError),
+    #[error("Errored whilst setting image from mem")]
+    SetImgFromMemError(#[from] plumbing::PixReadMemError),
+    #[error("Errored whilst setting variable")]
+    SetVariableError(#[from] SetVariableError),
 }
+
+pub struct Tesseract(plumbing::TessBaseAPI);
 
 impl Tesseract {
-    pub fn new() -> Tesseract {
-        Tesseract {
-            raw: unsafe { TessBaseAPICreate() },
-        }
+    pub fn new(datapath: Option<&str>, language: Option<&str>) -> Result<Self, InitializeError> {
+        let mut tess = Tesseract(plumbing::TessBaseAPI::new());
+        let datapath = match datapath {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+        let language = match language {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+
+        tess.0.init_2(datapath.as_deref(), language.as_deref())?;
+        Ok(tess)
     }
-    pub fn set_lang(&mut self, language: &str) -> i32 {
-        let cs_language = cs(language);
-        unsafe { TessBaseAPIInit3(self.raw, ptr::null(), cs_language.as_ptr()) }
-    }
-    pub fn set_image(&mut self, filename: &str) {
-        let cs_filename = cs(filename);
-        unsafe {
-            let img = pixRead(cs_filename.as_ptr());
-            TessBaseAPISetImage2(self.raw, img);
-            pixFreeData(img);
-        }
+    pub fn set_image(mut self, filename: &str) -> Result<Self, SetImageError> {
+        let pix = plumbing::Pix::read(&CString::new(filename)?)?;
+        self.0.set_image_2(&pix);
+        Ok(self)
     }
     pub fn set_frame(
-        &mut self,
+        mut self,
         frame_data: &[u8],
         width: i32,
         height: i32,
         bytes_per_pixel: i32,
         bytes_per_line: i32,
-    ) {
-        unsafe {
-            TessBaseAPISetImage(
-                self.raw,
-                frame_data.as_ptr(),
-                width,
-                height,
-                bytes_per_pixel,
-                bytes_per_line,
-            );
-        }
+    ) -> Result<Self, plumbing::TessBaseAPISetImageSafetyError> {
+        self.0
+            .set_image_1(frame_data, width, height, bytes_per_pixel, bytes_per_line)?;
+        Ok(self)
     }
-    pub fn set_image_from_mem(&mut self, img: &[u8]) {
-        unsafe {
-            let img = pixReadMem(img.as_ptr(), img.len());
-            TessBaseAPISetImage2(self.raw, img);
-            pixFreeData(img);
-        }
+    pub fn set_image_from_mem(mut self, img: &[u8]) -> Result<Self, plumbing::PixReadMemError> {
+        let pix = plumbing::Pix::read_mem(img)?;
+        self.0.set_image_2(&pix);
+        Ok(self)
     }
 
-    pub fn set_source_resolution(&mut self, ppi: i32) {
-        unsafe {
-            TessBaseAPISetSourceResolution(self.raw, ppi);
-        }
+    pub fn set_source_resolution(mut self, ppi: i32) -> Self {
+        self.0.set_source_resolution(ppi);
+        self
     }
 
-    pub fn set_variable(&mut self, name: &str, value: &str) -> i32 {
-        let cs_name = cs(name);
-        let cs_value = cs(value);
-        unsafe { TessBaseAPISetVariable(self.raw, cs_name.as_ptr(), cs_value.as_ptr()) }
+    pub fn set_variable(mut self, name: &str, value: &str) -> Result<Self, SetVariableError> {
+        self.0
+            .set_variable(&CString::new(name)?, &CString::new(value)?)?;
+        Ok(self)
     }
-    pub fn recognize(&mut self) -> i32 {
-        unsafe { TessBaseAPIRecognize(self.raw, ptr::null_mut()) }
+    pub fn recognize(mut self) -> Result<Self, plumbing::TessBaseAPIRecogniseError> {
+        self.0.recognize()?;
+        Ok(self)
     }
-    pub fn get_text(&self) -> String {
-        unsafe {
-            let cs_value = TessBaseAPIGetUTF8Text(self.raw);
-            let string = CStr::from_ptr(cs_value).to_string_lossy().into_owned();
-            TessDeleteText(cs_value);
-            string
-        }
+    pub fn get_text(&mut self) -> Result<String, plumbing::TessBaseAPIGetUTF8TextError> {
+        Ok(self
+            .0
+            .get_utf8_text()?
+            .as_ref()
+            .to_string_lossy()
+            .into_owned())
     }
 }
 
-pub fn ocr(filename: &str, language: &str) -> String {
-    let mut cube = Tesseract::new();
-    cube.set_lang(language);
-    cube.set_image(filename);
-    cube.recognize();
-    cube.get_text()
+pub fn ocr(filename: &str, language: &str) -> Result<String, TesseractError> {
+    Ok(Tesseract::new(None, Some(language))?
+        .set_image(filename)?
+        .recognize()?
+        .get_text()?)
 }
 
 pub fn ocr_from_frame(
@@ -117,59 +127,46 @@ pub fn ocr_from_frame(
     bytes_per_pixel: i32,
     bytes_per_line: i32,
     language: &str,
-) -> String {
-    let mut cube = Tesseract::new();
-    cube.set_lang(language);
-    cube.set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line);
-    cube.recognize();
-    cube.get_text()
+) -> Result<String, TesseractError> {
+    Ok(Tesseract::new(None, Some(language))?
+        .set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line)?
+        .recognize()?
+        .get_text()?)
 }
 
 #[test]
-fn ocr_test() {
+fn ocr_test() -> Result<(), TesseractError> {
     assert_eq!(
-        ocr("img.png", "eng"),
+        ocr("img.png", "eng")?,
         include_str!("../img.txt").to_string()
     );
+    Ok(())
 }
 
 #[test]
-fn ocr_from_frame_test() {
-    use std::fs::File;
-    use std::io::Read;
-
-    let mut img = File::open("img.tiff").unwrap();
-    let mut buffer = Vec::new();
-    img.read_to_end(&mut buffer).unwrap();
-
+fn ocr_from_frame_test() -> Result<(), TesseractError> {
     assert_eq!(
-        ocr_from_frame(&buffer, 2256, 324, 3, 2256 * 3, "eng"),
+        ocr_from_frame(include_bytes!("../img.tiff"), 2256, 324, 3, 2256 * 3, "eng")?,
         include_str!("../img.txt").to_string()
     );
+    Ok(())
 }
 
 #[test]
-fn ocr_from_mem_with_ppi() {
-    use std::fs::File;
-    use std::io::Read;
-
-    let mut img = File::open("img.tiff").unwrap();
-    let mut buffer = Vec::new();
-    img.read_to_end(&mut buffer).unwrap();
-
-    let mut cube = Tesseract::new();
-    cube.set_lang("eng");
-    cube.set_image_from_mem(&buffer);
-
-    cube.set_source_resolution(70);
-    assert_eq!(cube.get_text(), include_str!("../img.txt").to_string());
+fn ocr_from_mem_with_ppi() -> Result<(), TesseractError> {
+    let mut cube = Tesseract::new(None, Some("eng"))?
+        .set_image_from_mem(include_bytes!("../img.tiff"))?
+        .set_source_resolution(70);
+    assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
+    Ok(())
 }
 
 #[test]
-fn expanded_test() {
-    let mut cube = Tesseract::new();
-    cube.set_lang("eng");
-    cube.set_image("img.png");
-    cube.recognize();
-    assert_eq!(cube.get_text(), include_str!("../img.txt").to_string())
+fn expanded_test() -> Result<(), TesseractError> {
+    let mut cube = Tesseract::new(None, Some("eng"))?
+        .set_image("img.png")?
+        .set_variable("tessedit_char_blacklist", "z")?
+        .recognize()?;
+    assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
+    Ok(())
 }

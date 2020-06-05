@@ -1,8 +1,0 @@
-[package]
-name = "wrinkle"
-version = "0.1.0"
-authors = ["Kevin Kwok <antimatter15@gmail.com>"]
-
-[dependencies.tesseract]
-tesseract = "0.1"
-path = "../"

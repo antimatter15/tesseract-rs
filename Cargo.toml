@@ -12,3 +12,4 @@ categories    = ["api-bindings", "multimedia::images"]
 [dependencies]
 leptonica-sys = "0.3.0"
 tesseract-sys = "0.5.1"
+thiserror = "1.0"

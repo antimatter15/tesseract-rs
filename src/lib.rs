@@ -8,7 +8,7 @@ use std::str;
 pub mod plumbing;
 
 #[derive(Debug, Error)]
-pub enum SetLangError {
+pub enum InitializeError {
     #[error("Conversion to CString failed")]
     CStringError(#[from] NulError),
     #[error("TessBaseApi failed to initialize")]
@@ -34,7 +34,7 @@ pub enum SetVariableError {
 #[derive(Debug, Error)]
 pub enum TesseractError {
     #[error("Failed to set language")]
-    SetLangError(#[from] SetLangError),
+    InitializeError(#[from] InitializeError),
     #[error("Failed to set image")]
     SetImageError(#[from] SetImageError),
     #[error("Errored whilst recognizing")]
@@ -51,19 +51,20 @@ pub enum TesseractError {
 
 pub struct Tesseract(plumbing::TessBaseAPI);
 
-impl Default for Tesseract {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Tesseract {
-    pub fn new() -> Tesseract {
-        Tesseract(plumbing::TessBaseAPI::new())
-    }
-    pub fn set_lang(mut self, language: &str) -> Result<Self, SetLangError> {
-        self.0.init_2(None, Some(&CString::new(language)?))?;
-        Ok(self)
+    pub fn new(datapath: Option<&str>, language: Option<&str>) -> Result<Self, InitializeError> {
+        let mut tess = Tesseract(plumbing::TessBaseAPI::new());
+        let datapath = match datapath {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+        let language = match language {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+
+        tess.0.init_2(datapath.as_deref(), language.as_deref())?;
+        Ok(tess)
     }
     pub fn set_image(mut self, filename: &str) -> Result<Self, SetImageError> {
         let pix = plumbing::Pix::read(&CString::new(filename)?)?;
@@ -113,8 +114,7 @@ impl Tesseract {
 }
 
 pub fn ocr(filename: &str, language: &str) -> Result<String, TesseractError> {
-    Ok(Tesseract::new()
-        .set_lang(language)?
+    Ok(Tesseract::new(None, Some(language))?
         .set_image(filename)?
         .recognize()?
         .get_text()?)
@@ -128,8 +128,7 @@ pub fn ocr_from_frame(
     bytes_per_line: i32,
     language: &str,
 ) -> Result<String, TesseractError> {
-    Ok(Tesseract::new()
-        .set_lang(language)?
+    Ok(Tesseract::new(None, Some(language))?
         .set_frame(frame_data, width, height, bytes_per_pixel, bytes_per_line)?
         .recognize()?
         .get_text()?)
@@ -155,8 +154,7 @@ fn ocr_from_frame_test() -> Result<(), TesseractError> {
 
 #[test]
 fn ocr_from_mem_with_ppi() -> Result<(), TesseractError> {
-    let mut cube = Tesseract::new()
-        .set_lang("eng")?
+    let mut cube = Tesseract::new(None, Some("eng"))?
         .set_image_from_mem(include_bytes!("../img.tiff"))?
         .set_source_resolution(70);
     assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
@@ -165,8 +163,7 @@ fn ocr_from_mem_with_ppi() -> Result<(), TesseractError> {
 
 #[test]
 fn expanded_test() -> Result<(), TesseractError> {
-    let mut cube = Tesseract::new()
-        .set_lang("eng")?
+    let mut cube = Tesseract::new(None, Some("eng"))?
         .set_image("img.png")?
         .set_variable("tessedit_char_blacklist", "z")?
         .recognize()?;

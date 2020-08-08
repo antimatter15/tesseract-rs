@@ -3,8 +3,8 @@ extern crate thiserror;
 
 use self::leptonica_sys::{pixFreeData, pixRead, pixReadMem};
 use self::thiserror::Error;
-use std::convert::AsRef;
-use std::ffi::CStr;
+use std::convert::{AsRef, TryInto};
+use std::{ffi::CStr, num::TryFromIntError};
 
 /// Wrapper around Leptonica's [`Pix`](https://tpgit.github.io/Leptonica/struct_pix.html) structure
 pub struct Pix(*mut leptonica_sys::Pix);
@@ -28,8 +28,12 @@ impl AsRef<*mut leptonica_sys::Pix> for Pix {
 pub struct PixReadError();
 
 #[derive(Debug, Error)]
-#[error("Pix::read_mem returned null")]
-pub struct PixReadMemError();
+pub enum PixReadMemError {
+    #[error("Pix::read_mem returned null")]
+    NullPtr,
+    #[error("Failed to convert image size")]
+    ImageSizeConversion(#[from] TryFromIntError),
+}
 
 impl Pix {
     /// Wrapper for [`pixRead`](https://tpgit.github.io/Leptonica/leptprotos_8h.html#a84634846cbb5e01df667d6e9241dfc53)
@@ -48,14 +52,9 @@ impl Pix {
     ///
     /// Read an image from memory
     pub fn read_mem(img: &[u8]) -> Result<Self, PixReadMemError> {
-        let img_len: u64 = img
-            .len()
-            .try_into()
-            .expect("Image len usize doesn't fit in u64");
-
-        let ptr = unsafe { pixReadMem(img.as_ptr(), img_len) };
+        let ptr = unsafe { pixReadMem(img.as_ptr(), img.len().try_into()?) };
         if ptr.is_null() {
-            Err(PixReadMemError {})
+            Err(PixReadMemError::NullPtr)
         } else {
             Ok(Self(ptr))
         }

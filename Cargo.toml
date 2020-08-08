@@ -10,6 +10,6 @@ keywords      = ["tesseract", "OCR", "bindings"]
 categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
-leptonica-sys = "0.3.0"
-tesseract-sys = "0.5.1"
+leptonica-sys = "0.3.2"
+tesseract-sys = "0.5.3"
 thiserror = "1.0"

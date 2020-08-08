@@ -48,7 +48,12 @@ impl Pix {
     ///
     /// Read an image from memory
     pub fn read_mem(img: &[u8]) -> Result<Self, PixReadMemError> {
-        let ptr = unsafe { pixReadMem(img.as_ptr(), img.len()) };
+        let img_len: u64 = img
+            .len()
+            .try_into()
+            .expect("Image len usize doesn't fit in u64");
+
+        let ptr = unsafe { pixReadMem(img.as_ptr(), img_len) };
         if ptr.is_null() {
             Err(PixReadMemError {})
         } else {

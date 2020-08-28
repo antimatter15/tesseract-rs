@@ -6,7 +6,7 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 /// Wrapper around Tesseract's returned strings
-pub struct TesseractText(*const c_char);
+pub struct TesseractText(*mut c_char);
 
 impl Drop for TesseractText {
     fn drop(&mut self) {
@@ -19,7 +19,7 @@ impl TesseractText {
     ///
     /// This function should only be called with a valid string pointer from Tesseract.
     /// `TesseractText` will be responsible for freeing it.
-    pub unsafe fn new(raw: *const c_char) -> Self {
+    pub unsafe fn new(raw: *mut c_char) -> Self {
         Self(raw)
     }
 }

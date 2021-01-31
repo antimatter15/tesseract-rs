@@ -3,6 +3,7 @@ extern crate thiserror;
 use self::thiserror::Error;
 use std::ffi::CString;
 use std::ffi::NulError;
+use std::os::raw::c_int;
 use std::str;
 
 pub mod plumbing;
@@ -41,6 +42,8 @@ pub enum TesseractError {
     RecognizeError(#[from] plumbing::TessBaseAPIRecogniseError),
     #[error("Errored whilst getting text")]
     GetTextError(#[from] plumbing::TessBaseAPIGetUTF8TextError),
+    #[error("Errored whilst getting HOCR text")]
+    GetHOCRTextError(#[from] plumbing::TessBaseAPIGetHOCRTextError),
     #[error("Errored whilst setting frame")]
     SetFrameError(#[from] plumbing::TessBaseAPISetImageSafetyError),
     #[error("Errored whilst setting image from mem")]
@@ -111,6 +114,21 @@ impl Tesseract {
             .to_string_lossy()
             .into_owned())
     }
+
+    /// Get the text encoded as HTML with bounding box tags
+    ///
+    /// See [img.html](../img.html) for an example.
+    pub fn get_hocr_text(
+        &mut self,
+        page: c_int,
+    ) -> Result<String, plumbing::TessBaseAPIGetHOCRTextError> {
+        Ok(self
+            .0
+            .get_hocr_text(page)?
+            .as_ref()
+            .to_string_lossy()
+            .into_owned())
+    }
 }
 
 pub fn ocr(filename: &str, language: &str) -> Result<String, TesseractError> {
@@ -168,5 +186,12 @@ fn expanded_test() -> Result<(), TesseractError> {
         .set_variable("tessedit_char_blacklist", "z")?
         .recognize()?;
     assert_eq!(&cube.get_text()?, include_str!("../img.txt"));
+    Ok(())
+}
+
+#[test]
+fn hocr_test() -> Result<(), TesseractError> {
+    let mut cube = Tesseract::new(None, Some("eng"))?.set_image("img.png")?;
+    assert_eq!(&cube.get_hocr_text(0)?, include_str!("../img.html"));
     Ok(())
 }

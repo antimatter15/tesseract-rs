@@ -11,6 +11,7 @@ pub use self::pix::Pix;
 pub use self::pix::PixReadError;
 pub use self::pix::PixReadMemError;
 pub use self::tess_base_api::TessBaseAPI;
+pub use self::tess_base_api::TessBaseAPIGetHOCRTextError;
 pub use self::tess_base_api::TessBaseAPIGetUTF8TextError;
 pub use self::tess_base_api::TessBaseAPIInitError;
 pub use self::tess_base_api::TessBaseAPIRecogniseError;

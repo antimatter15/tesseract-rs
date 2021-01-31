@@ -2,8 +2,8 @@ extern crate tesseract_sys;
 extern crate thiserror;
 
 use self::tesseract_sys::{
-    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetUTF8Text, TessBaseAPIInit3,
-    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetHOCRText, TessBaseAPIGetUTF8Text,
+    TessBaseAPIInit3, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
     TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
 };
 use self::thiserror::Error;
@@ -39,6 +39,10 @@ pub struct TessBaseAPISetVariableError();
 #[derive(Debug, Error)]
 #[error("TessBaseApi failed to recognize")]
 pub struct TessBaseAPIRecogniseError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_hocr_text returned null")]
+pub struct TessBaseAPIGetHOCRTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_utf8_text returned null")]
@@ -171,6 +175,25 @@ impl TessBaseAPI {
         let ptr = unsafe { TessBaseAPIGetUTF8Text(self.0) };
         if ptr.is_null() {
             Err(TessBaseAPIGetUTF8TextError {})
+        } else {
+            Ok(unsafe { TesseractText::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`GetUTF8Text`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a655f906bbf64dcd6f33ce633ecce997d)
+    ///
+    /// Get the text out of an image.
+    ///
+    /// Can return an error (null pointer), but it is not clear to me what would cause this.
+    ///
+    /// This will implicitly call `recognize` if required.
+    pub fn get_hocr_text(
+        &mut self,
+        page: c_int,
+    ) -> Result<TesseractText, TessBaseAPIGetHOCRTextError> {
+        let ptr = unsafe { TessBaseAPIGetHOCRText(self.0, page) };
+        if ptr.is_null() {
+            Err(TessBaseAPIGetHOCRTextError {})
         } else {
             Ok(unsafe { TesseractText::new(ptr) })
         }

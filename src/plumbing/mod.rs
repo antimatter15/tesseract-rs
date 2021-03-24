@@ -19,6 +19,11 @@ pub use self::tess_base_api::TessBaseAPISetImageSafetyError;
 pub use self::tess_base_api::TessBaseAPISetVariableError;
 pub use self::tesseract_text::TesseractText;
 
+pub use self::tesseract_text::{
+    TessOcrEngineMode, TessOcrEngineMode_OEM_DEFAULT, TessOcrEngineMode_OEM_LSTM_ONLY,
+    TessOcrEngineMode_OEM_TESSERACT_LSTM_COMBINED, TessOcrEngineMode_OEM_TESSERACT_ONLY,
+};
+
 #[test]
 fn ocr_from_mem_with_ppi() -> Result<(), Box<dyn std::error::Error>> {
     use std::ffi::CString;

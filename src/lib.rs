@@ -52,6 +52,26 @@ pub enum TesseractError {
     SetVariableError(#[from] SetVariableError),
 }
 
+pub enum OcrEngineMode {
+    Default,
+    LstmOnly,
+    TesseractLstmCombined,
+    TesseractOnly,
+}
+
+impl OcrEngineMode {
+    pub(crate) fn to_value(&self) -> plumbing::TessOcrEngineMode {
+        match *self {
+            OcrEngineMode::Default => plumbing::TessOcrEngineMode_OEM_DEFAULT,
+            OcrEngineMode::LstmOnly => plumbing::TessOcrEngineMode_OEM_LSTM_ONLY,
+            OcrEngineMode::TesseractLstmCombined => {
+                plumbing::TessOcrEngineMode_OEM_TESSERACT_LSTM_COMBINED
+            }
+            OcrEngineMode::TesseractOnly => plumbing::TessOcrEngineMode_OEM_TESSERACT_ONLY,
+        }
+    }
+}
+
 pub struct Tesseract(plumbing::TessBaseAPI);
 
 impl Tesseract {
@@ -69,6 +89,27 @@ impl Tesseract {
         tess.0.init_2(datapath.as_deref(), language.as_deref())?;
         Ok(tess)
     }
+
+    pub fn new_with_oem(
+        datapath: Option<&str>,
+        language: Option<&str>,
+        oem: OcrEngineMode,
+    ) -> Result<Self, InitializeError> {
+        let mut tess = Tesseract(plumbing::TessBaseAPI::new());
+        let datapath = match datapath {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+        let language = match language {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+
+        tess.0
+            .init_4(datapath.as_deref(), language.as_deref(), oem.to_value())?;
+        Ok(tess)
+    }
+
     pub fn set_image(mut self, filename: &str) -> Result<Self, SetImageError> {
         let pix = plumbing::Pix::read(&CString::new(filename)?)?;
         self.0.set_image_2(&pix);
@@ -193,5 +234,22 @@ fn expanded_test() -> Result<(), TesseractError> {
 fn hocr_test() -> Result<(), TesseractError> {
     let mut cube = Tesseract::new(None, Some("eng"))?.set_image("img.png")?;
     assert!(&cube.get_hocr_text(0)?.contains("<div class='ocr_page'"));
+    Ok(())
+}
+
+#[test]
+fn oem_test() -> Result<(), TesseractError> {
+    let only_tesseract_str =
+        Tesseract::new_with_oem(None, Some("eng"), OcrEngineMode::TesseractOnly)?
+            .set_image("img.png")?
+            .recognize()?
+            .get_text()?;
+
+    let only_lstm_str = Tesseract::new_with_oem(None, Some("eng"), OcrEngineMode::LstmOnly)?
+        .set_image("img.png")?
+        .recognize()?
+        .get_text()?;
+
+    assert_ne!(only_tesseract_str, only_lstm_str);
     Ok(())
 }

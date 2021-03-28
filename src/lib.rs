@@ -1,3 +1,4 @@
+extern crate tesseract_sys;
 extern crate thiserror;
 
 use self::thiserror::Error;
@@ -5,6 +6,11 @@ use std::ffi::CString;
 use std::ffi::NulError;
 use std::os::raw::c_int;
 use std::str;
+
+use self::tesseract_sys::{
+    TessOcrEngineMode, TessOcrEngineMode_OEM_DEFAULT, TessOcrEngineMode_OEM_LSTM_ONLY,
+    TessOcrEngineMode_OEM_TESSERACT_LSTM_COMBINED, TessOcrEngineMode_OEM_TESSERACT_ONLY,
+};
 
 pub mod plumbing;
 
@@ -60,14 +66,12 @@ pub enum OcrEngineMode {
 }
 
 impl OcrEngineMode {
-    pub(crate) fn to_value(&self) -> plumbing::TessOcrEngineMode {
+    fn to_value(&self) -> TessOcrEngineMode {
         match *self {
-            OcrEngineMode::Default => plumbing::TessOcrEngineMode_OEM_DEFAULT,
-            OcrEngineMode::LstmOnly => plumbing::TessOcrEngineMode_OEM_LSTM_ONLY,
-            OcrEngineMode::TesseractLstmCombined => {
-                plumbing::TessOcrEngineMode_OEM_TESSERACT_LSTM_COMBINED
-            }
-            OcrEngineMode::TesseractOnly => plumbing::TessOcrEngineMode_OEM_TESSERACT_ONLY,
+            OcrEngineMode::Default => TessOcrEngineMode_OEM_DEFAULT,
+            OcrEngineMode::LstmOnly => TessOcrEngineMode_OEM_LSTM_ONLY,
+            OcrEngineMode::TesseractLstmCombined => TessOcrEngineMode_OEM_TESSERACT_LSTM_COMBINED,
+            OcrEngineMode::TesseractOnly => TessOcrEngineMode_OEM_TESSERACT_ONLY,
         }
     }
 }

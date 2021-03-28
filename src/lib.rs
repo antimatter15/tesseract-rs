@@ -58,10 +58,23 @@ pub enum TesseractError {
     SetVariableError(#[from] SetVariableError),
 }
 
+/// https://tesseract-ocr.github.io/tessapi/5.x/a01818.html#a04550a0ed1279562027bf2fc92c421aead84e1ef94e50df1622b4fcd189c6c00b
 pub enum OcrEngineMode {
+    /// Run Tesseract only - fastest; deprecated
     Default,
+    /// Run just the LSTM line recognizer.
     LstmOnly,
+    /// Run the LSTM recognizer, but allow fallback
+    /// to Tesseract when things get difficult.
+    /// deprecated
     TesseractLstmCombined,
+    /// Specify this mode,
+    /// to indicate that any of the above modes
+    /// should be automatically inferred from the
+    /// variables in the language-specific config,
+    /// command-line configs, or if not specified
+    /// in any of the above should be set to the
+    /// default OEM_TESSERACT_ONLY.
     TesseractOnly,
 }
 

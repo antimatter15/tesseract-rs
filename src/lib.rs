@@ -271,3 +271,14 @@ fn oem_test() -> Result<(), TesseractError> {
     assert_ne!(only_tesseract_str, only_lstm_str);
     Ok(())
 }
+
+#[test]
+fn oem_ltsm_only_test() -> Result<(), TesseractError> {
+    let only_lstm_str = Tesseract::new_with_oem(None, Some("eng"), OcrEngineMode::LstmOnly)?
+        .set_image("img.png")?
+        .recognize()?
+        .get_text()?;
+
+    assert_eq!(only_lstm_str, include_str!("../img.txt"));
+    Ok(())
+}

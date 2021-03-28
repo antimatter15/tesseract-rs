@@ -255,6 +255,7 @@ fn hocr_test() -> Result<(), TesseractError> {
 }
 
 #[test]
+#[ignore] // Many systems do not have legacy Tesseract data available
 fn oem_test() -> Result<(), TesseractError> {
     let only_tesseract_str =
         Tesseract::new_with_oem(None, Some("eng"), OcrEngineMode::TesseractOnly)?

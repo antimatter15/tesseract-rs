@@ -5,9 +5,10 @@ use self::tesseract_sys::{
     TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetHOCRText, TessBaseAPIGetUTF8Text,
     TessBaseAPIInit2, TessBaseAPIInit3, TessBaseAPIRecognize, TessBaseAPISetImage,
     TessBaseAPISetImage2, TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
+    TessOcrEngineMode,
 };
 use self::thiserror::Error;
-use crate::plumbing::{Pix, TessOcrEngineMode, TesseractText};
+use crate::plumbing::{Pix, TesseractText};
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::os::raw::c_int;

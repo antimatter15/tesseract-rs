@@ -1,6 +1,6 @@
 [package]
 name          = "tesseract"
-version       = "0.8.0"
+version       = "0.9.0"
 authors       = ["Kevin Kwok <antimatter15@gmail.com>", "Chris Couzens <ccouzens@gmail.com>"]
 documentation = "https://docs.rs/tesseract"
 repository    = "https://github.com/antimatter15/tesseract-rs"
@@ -10,6 +10,6 @@ keywords      = ["tesseract", "OCR", "bindings"]
 categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
-leptonica-sys = "0.3.2"
 tesseract-sys = "0.5.3"
+tesseract-plumbing = "0.3.0"
 thiserror = "1.0"

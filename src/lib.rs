@@ -174,6 +174,9 @@ impl Tesseract {
             .to_string_lossy()
             .into_owned())
     }
+    pub fn mean_text_conf(&mut self) -> i32 {
+        self.0.mean_text_conf()
+    }
 
     /// Get the text encoded as HTML with bounding box tags
     ///

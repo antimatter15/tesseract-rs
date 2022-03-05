@@ -49,6 +49,8 @@ pub enum TesseractError {
     GetTextError(#[from] plumbing::TessBaseApiGetUtf8TextError),
     #[error("Errored whilst getting HOCR text")]
     GetHOCRTextError(#[from] plumbing::TessBaseApiGetHocrTextError),
+    #[error("Errored whilst getting TSV text")]
+    GetTsvTextError(#[from] plumbing::TessBaseApiGetTsvTextError),
     #[error("Errored whilst setting frame")]
     SetFrameError(#[from] plumbing::TessBaseApiSetImageSafetyError),
     #[error("Errored whilst setting image from mem")]
@@ -188,6 +190,21 @@ impl Tesseract {
         Ok(self
             .0
             .get_hocr_text(page)?
+            .as_ref()
+            .to_string_lossy()
+            .into_owned())
+    }
+
+    /// Get the text encoded as TSV, including bounding boxes, confidence
+    ///
+    /// See [char* TessBaseAPI::GetTSVText](https://github.com/tesseract-ocr/tesseract/blob/cdebe13d81e2ad2a83be533886750f5491b25262/src/api/baseapi.cpp#L1398)
+    pub fn get_tsv_text(
+        &mut self,
+        page: c_int,
+    ) -> Result<String, plumbing::TessBaseApiGetTsvTextError> {
+        Ok(self
+            .0
+            .get_tsv_text(page)?
             .as_ref()
             .to_string_lossy()
             .into_owned())

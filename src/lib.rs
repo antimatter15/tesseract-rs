@@ -154,6 +154,11 @@ impl Tesseract {
         Ok(self)
     }
 
+    pub fn set_rectangle(mut self, left: i32, top: i32, width: i32, height: i32) -> Self {
+        self.0.set_rectangle(left, top, width, height);
+        self
+    }
+
     pub fn set_source_resolution(mut self, ppi: i32) -> Self {
         self.0.set_source_resolution(ppi);
         self

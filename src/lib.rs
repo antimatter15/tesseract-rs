@@ -309,3 +309,8 @@ fn oem_ltsm_only_test() -> Result<(), TesseractError> {
     assert_eq!(only_lstm_str, include_str!("../img.txt"));
     Ok(())
 }
+
+#[test]
+fn initialize_with_none() {
+    assert!(Tesseract::new(None, None).is_ok());
+}

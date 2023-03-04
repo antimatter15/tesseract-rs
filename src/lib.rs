@@ -7,6 +7,9 @@ use std::ffi::CString;
 use std::ffi::NulError;
 use std::os::raw::c_int;
 use std::str;
+mod page_seg_mode;
+
+pub use page_seg_mode::PageSegMode;
 
 use self::tesseract_sys::{
     TessOcrEngineMode, TessOcrEngineMode_OEM_DEFAULT, TessOcrEngineMode_OEM_LSTM_ONLY,
@@ -213,6 +216,10 @@ impl Tesseract {
             .as_ref()
             .to_string_lossy()
             .into_owned())
+    }
+
+    pub fn set_page_seg_mode(&mut self, mode: PageSegMode) {
+        self.0.set_page_seg_mode(mode.as_tess_page_seg_mode());
     }
 }
 

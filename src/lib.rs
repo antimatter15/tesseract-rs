@@ -131,6 +131,22 @@ impl Tesseract {
         Ok(tess)
     }
 
+    pub fn new_with_data(
+        data: &[u8],
+        language: Option<&str>,
+        oem: OcrEngineMode,
+    ) -> Result<Self, InitializeError> {
+        let mut tess = Tesseract(plumbing::TessBaseApi::create());
+        let language = match language {
+            Some(i) => Some(CString::new(i)?),
+            None => None,
+        };
+
+        tess.0
+            .init_1(data, language.as_deref(), oem.to_value())?;
+        Ok(tess)
+    }
+
     pub fn set_image(mut self, filename: &str) -> Result<Self, SetImageError> {
         let pix = plumbing::leptonica_plumbing::Pix::read(&CString::new(filename)?)?;
         self.0.set_image_2(&pix);

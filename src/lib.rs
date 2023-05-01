@@ -142,8 +142,7 @@ impl Tesseract {
             None => None,
         };
 
-        tess.0
-            .init_1(data, language.as_deref(), oem.to_value())?;
+        tess.0.init_1(data, language.as_deref(), oem.to_value())?;
         Ok(tess)
     }
 

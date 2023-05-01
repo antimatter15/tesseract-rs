@@ -1,6 +1,6 @@
 [package]
 name          = "tesseract"
-version       = "0.13.0"
+version       = "0.14.0"
 authors       = ["Kevin Kwok <antimatter15@gmail.com>", "Chris Couzens <ccouzens@gmail.com>"]
 documentation = "https://docs.rs/tesseract"
 repository    = "https://github.com/antimatter15/tesseract-rs"
@@ -11,5 +11,5 @@ categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
 tesseract-sys = "~0.5"
-tesseract-plumbing = "~0.9"
+tesseract-plumbing = "~0.10"
 thiserror = "1.0"

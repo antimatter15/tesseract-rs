@@ -11,5 +11,5 @@ categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
 tesseract-sys = "~0.5"
-tesseract-plumbing = "~0.10"
+tesseract-plumbing = "~0.11"
 thiserror = "1.0"

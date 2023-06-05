@@ -11,5 +11,9 @@ categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
 tesseract-sys = "~0.5"
-tesseract-plumbing = "~0.10"
+tesseract-plumbing = { version="~0.11", default-features = false }
 thiserror = "1.0"
+
+[features]
+default = ["tesseract_5_2"]
+tesseract_5_2 = ["tesseract-plumbing/tesseract_5_2"]

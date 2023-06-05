@@ -131,6 +131,7 @@ impl Tesseract {
         Ok(tess)
     }
 
+    #[cfg(feature = "tesseract_5_2")]
     pub fn new_with_data(
         data: &[u8],
         language: Option<&str>,

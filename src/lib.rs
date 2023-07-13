@@ -7,8 +7,10 @@ use std::ffi::CString;
 use std::ffi::NulError;
 use std::os::raw::c_int;
 use std::str;
+pub mod iterator;
 mod page_seg_mode;
 
+pub use iterator::{ResultIterator, TesseractIteratorResult};
 pub use page_seg_mode::PageSegMode;
 
 use self::tesseract_sys::{
@@ -236,6 +238,21 @@ impl Tesseract {
 
     pub fn set_page_seg_mode(&mut self, mode: PageSegMode) {
         self.0.set_page_seg_mode(mode.as_tess_page_seg_mode());
+    }
+
+    pub fn iterator(&mut self) -> Option<ResultIterator> {
+        let result_iter =
+            unsafe { tesseract_sys::TessBaseAPIGetIterator(self.0.get_raw().cast_mut()) };
+        if result_iter.is_null() {
+            return None;
+        }
+        Some(ResultIterator::new(
+            tesseract_plumbing::ResultIterator::new(result_iter),
+        ))
+    }
+
+    pub unsafe fn get_raw(&mut self) -> *const tesseract_sys::TessBaseAPI {
+        self.0.get_raw()
     }
 }
 

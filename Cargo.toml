@@ -1,6 +1,6 @@
 [package]
 name          = "tesseract"
-version       = "0.15.0"
+version       = "0.15.1"
 authors       = ["Kevin Kwok <antimatter15@gmail.com>", "Chris Couzens <ccouzens@gmail.com>"]
 documentation = "https://docs.rs/tesseract"
 repository    = "https://github.com/antimatter15/tesseract-rs"
@@ -17,3 +17,8 @@ thiserror = "1.0"
 [features]
 default = ["tesseract_5_2"]
 tesseract_5_2 = ["tesseract-plumbing/tesseract_5_2"]
+
+[package.metadata.docs.rs]
+# docs.rs is not compatible with tesseract_5_2
+no-default-features = true
+

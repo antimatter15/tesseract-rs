@@ -8,6 +8,7 @@ description   = "Higher-level bindings for Tesseract OCR"
 license       = "MIT"
 keywords      = ["tesseract", "OCR", "bindings"]
 categories    = ["api-bindings", "multimedia::images"]
+edition = "2021"
 
 [dependencies]
 tesseract-sys = "~0.5"

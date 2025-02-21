@@ -10,7 +10,7 @@ keywords      = ["tesseract", "OCR", "bindings"]
 categories    = ["api-bindings", "multimedia::images"]
 
 [dependencies]
-tesseract-sys = "~0.5"
+tesseract-sys = "~0.6"
 tesseract-plumbing = { version="~0.11", default-features = false }
 thiserror = "1.0"
 
